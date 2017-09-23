@@ -10,6 +10,8 @@
   "author": "dann_",
   "license": "ISC",
   "dependencies": {
-    "express": "^4.15.4"
+    "express": "^4.15.4",
+    "moniker": "^0.1.2",
+    "socket.io": "^2.0.3"
   }
 }

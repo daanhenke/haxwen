@@ -1,0 +1,87 @@
+<html>
+	<head>
+		<title>HaxWen</title>
+
+		<style>
+			#countdown {
+				text-align: center;
+				width: 100vw;
+				height: 30vh;
+			}
+
+			#chat {
+				width: 100vw;
+				height: 70vh;
+			}
+
+			#textInput {
+				width: 90%;
+			}
+		</style>
+	</head>
+
+	<body>
+		<div id="countdown">
+			<h1 id="motd">Connecting...</h1>
+			<h2 id="date"></h2>
+		</div>
+
+		<div id="chat">
+			<input type="text" id="textInput">
+			<input type="button" value="send" onclick="sendMessage()" id="buttonInput">
+			<div id="messages"></div>
+		</div>
+
+		<script src="/socket.io/socket.io.js"></script>
+		<script>
+			var socket = io();
+
+			var wen = undefined;
+
+			socket.on("motd", function(data) {
+				document.getElementById("motd").innerText = data.motd
+			});
+
+			socket.on("date", function(data) {
+				wen = new Date(data.date);
+			});
+
+			socket.on("chat", function(data) {
+				var user = document.createElement("b");
+				user.innerText = data.name + ": ";
+				var text = document.createElement("span");
+				text.innerText = data.message;
+
+				var container = document.createElement("div");
+				container.classList.add("message");
+
+				container.appendChild(user);
+				container.appendChild(text);
+
+				var msg = document.getElementById("messages");
+				msg.insertBefore(container, msg.firstChild);
+			});
+
+			function sendMessage() {
+				var inp = document.getElementById("textInput");
+				socket.emit("chat", {
+						message: inp.value
+					});
+				inp.value = "";
+			}
+
+			setInterval(function() {
+				var now = new Date().getTime();
+				var distance = wen.getTime() - now;
+
+				var days = Math.floor(distance / (1000 * 60 * 60 * 24));
+				var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+				var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+				var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+				var elem = document.getElementById("date");
+				elem.innerText = days + " days, " + hours + " hours, " + minutes + " minutes and " + seconds + " seconds.";
+			}, 1000)
+		</script>
+	</body>
+</html>
