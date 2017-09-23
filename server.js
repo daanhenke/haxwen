@@ -14,12 +14,14 @@ const port = process.env.PORT || 1337;
 
 var motd = "Hax inboud in: "
 var wen = new Date();
+var pass = "plzno"
 wen.setDate(wen.getDate() + 20);
 
 app.use("/", express.static(path.join(__dirname, "public")))
 
 io.on("connect", function(socket) {
 	socket.username = moniker.choose();
+	socket.cooldude = false;
 
 	socket.emit("motd", {motd: motd});
 	socket.emit("date", {date: wen.toString()});
@@ -31,14 +33,27 @@ io.on("connect", function(socket) {
 	});
 
 	socket.on("chat", function(data) {
-		var chunks = data.message.split("-");
+		var chunks = data.message.split(";");
 		switch (chunks[0]) {
-			case ":~setmotd":
+			case ":setpass":
+				pass = chunks[1]
+				break;
+
+			case ":giveperm":
+				if (chunks[1] == pass)
+					socket.cooldude = true;
+				break;
+
+			case ":setmotd":
+				if (!socket.cooldude)
+					break;
 				motd = chunks[1];
 				io.emit("motd", {motd: motd});
 				break;
 			
-			case ":~disaster":
+			case ":disaster":
+				if (!socket.cooldude)
+					break;
 				addTime(parseInt(chunks[1]));
 				io.emit("chat", {
 					name: "server",
@@ -47,6 +62,8 @@ io.on("connect", function(socket) {
 				break;
 
 			default:
+				if (data.message.substr(0, 1) == ":" || data.message.substr(0, 1) == ";")
+					break;
 				socket.emit("chat", {
 					name: socket.username,
 					message: data.message
